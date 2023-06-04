@@ -1,29 +1,15 @@
 package main
 
 import (
-	"bytes"
-	"crypto/ecdsa"
-	"crypto/elliptic"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"github.com/decred/dcrd/dcrec/secp256k1/v2"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	"math/big"
-
 	"github.com/okx/threshold-lib/crypto/curves"
 	"github.com/okx/threshold-lib/crypto/paillier"
-
 	"github.com/okx/threshold-lib/tss"
 	"github.com/okx/threshold-lib/tss/ecdsa/keygen"
-	"github.com/okx/threshold-lib/tss/ecdsa/sign"
 	"github.com/okx/threshold-lib/tss/key/bip32"
 	"github.com/okx/threshold-lib/tss/key/dkg"
-
-	"golang.org/x/crypto/sha3"
-
-	"github.com/ethereum/go-ethereum/crypto"
 )
 
 const (
@@ -34,7 +20,7 @@ var (
 	curve = secp256k1.S256()
 )
 
-func KeyGen() (*tss.KeyStep3Data, *tss.KeyStep3Data, *tss.KeyStep3Data) {
+func main() {
 	setUp1 := dkg.NewSetUp(1, 3, curve)
 	setUp2 := dkg.NewSetUp(2, 3, curve)
 	setUp3 := dkg.NewSetUp(3, 3, curve)
@@ -62,106 +48,33 @@ func KeyGen() (*tss.KeyStep3Data, *tss.KeyStep3Data, *tss.KeyStep3Data) {
 	fmt.Println("setUp1", p1SaveData, p1SaveData.PublicKey)
 	fmt.Println("setUp2", p2SaveData, p2SaveData.PublicKey)
 	fmt.Println("setUp3", p3SaveData, p3SaveData.PublicKey)
-	return p1SaveData, p2SaveData, p3SaveData
-}
-
-func publicKeyToAddressBytes(publicKey *ecdsa.PublicKey) []byte {
-	hash := sha3.NewLegacyKeccak256()
-	hash.Write(elliptic.Marshal(publicKey.Curve, publicKey.X, publicKey.Y)[1:])
-	return hash.Sum(nil)[12:]
-}
-
-func main() {
-	p1Data, p2Data, _ := KeyGen()
 
 	fmt.Println("=========2/2 keygen==========")
 	preParams := &keygen.PreParams{}
 	err := json.Unmarshal([]byte(preParamsStr), preParams)
 	if err != nil {
 		fmt.Println("preParams Unmarshal error, ", err)
-		return
 	}
+	// 1-->2   1--->3
+	paiPriKey, _, _ := paillier.NewKeyPair(8)
+	p1Data, _ := keygen.P1(p1SaveData.ShareI, paiPriKey, setUp1.DeviceNumber, setUp2.DeviceNumber, preParams)
+	fmt.Println("p1Data", p1Data)
+	publicKey, _ := curves.NewECPoint(curve, p2SaveData.PublicKey.X, p2SaveData.PublicKey.Y)
+	p2Data, _ := keygen.P2(p2SaveData.ShareI, publicKey, p1Data, setUp1.DeviceNumber, setUp2.DeviceNumber)
+	fmt.Println("p2Data", p2Data)
 
-	paiPrivate, _, _ := paillier.NewKeyPair(8)
-	p1Dto, _ := keygen.P1(p1Data.ShareI, paiPrivate, p1Data.Id, p2Data.Id, preParams)
-	publicKey, _ := curves.NewECPoint(curve, p2Data.PublicKey.X, p2Data.PublicKey.Y)
-	p2SaveData, err := keygen.P2(p2Data.ShareI, publicKey, p1Dto, p1Data.Id, p2Data.Id)
-	fmt.Println(p2SaveData, err)
+	p1Data, _ = keygen.P1(p1SaveData.ShareI, paiPriKey, setUp1.DeviceNumber, setUp3.DeviceNumber, preParams)
+	fmt.Println("p1Data", p1Data)
+	p2Data, _ = keygen.P2(p3SaveData.ShareI, publicKey, p1Data, setUp1.DeviceNumber, setUp3.DeviceNumber)
+	fmt.Println("p2Data", p2Data)
 
 	fmt.Println("=========bip32==========")
-	tssKey, err := bip32.NewTssKey(p2SaveData.X2, p2Data.PublicKey, p2Data.ChainCode)
-	tssKey, err = tssKey.NewChildKey(996)
-	x2 := tssKey.ShareI()
-	pubKey := &ecdsa.PublicKey{Curve: curve, X: tssKey.PublicKey().X, Y: tssKey.PublicKey().Y}
-	fmt.Println("=========2/2 sign==========")
-	messageHash := crypto.Keccak256Hash([]byte("hello"))
+	tssKey, _ := bip32.NewTssKey(p1SaveData.ShareI, p1SaveData.PublicKey, p1SaveData.ChainCode)
+	tssKey, _ = tssKey.NewChildKey(996)
+	fmt.Println(tssKey.PublicKey())
 
-	p1 := sign.NewP1(pubKey, hex.EncodeToString(messageHash.Bytes()), paiPrivate)
-	p2 := sign.NewP2(x2, p2SaveData.E_x1, pubKey, p2SaveData.PaiPubKey, hex.EncodeToString(messageHash.Bytes()))
+	tssKey, _ = bip32.NewTssKey(p2SaveData.ShareI, p2SaveData.PublicKey, p2SaveData.ChainCode)
+	tssKey, _ = tssKey.NewChildKey(996)
+	fmt.Println(tssKey.PublicKey())
 
-	commit, _ := p1.Step1()
-	bobProof, R2, _ := p2.Step1(commit)
-
-	proof, cmtD, _ := p1.Step2(bobProof, R2)
-	E_k2_h_xr, _ := p2.Step2(cmtD, proof)
-
-	r, s, _ := p1.Step3(E_k2_h_xr)
-	fmt.Println(r, s)
-
-	fmt.Println("=========verify by solidity==========")
-
-	fmt.Println("Address:", "0x"+hex.EncodeToString(publicKeyToAddressBytes(pubKey)))
-	fmt.Println("Message Hash: " + messageHash.Hex())
-	signHex, _ := getSignByRS(pubKey, messageHash, r, s)
-	signBytes, _ := hex.DecodeString(signHex[2:])
-	fmt.Println("Signature: " + signHex)
-	fmt.Println("r: " + hexutil.EncodeBig(r))
-	fmt.Println("s: " + hexutil.EncodeBig(s))
-	fmt.Println("v: " + fmt.Sprintf("%v", signBytes[64]))
-	fmt.Println("=========verify by solidity==========")
-}
-
-func getSignByRS(pubKey *ecdsa.PublicKey, messageHash common.Hash, r *big.Int, s *big.Int) (string, error) {
-	// 将签名转换为字节数组
-	signature := append(r.Bytes(), s.Bytes()...)
-
-	// 将签名编码为十六进制字符串
-	signatureHex := hex.EncodeToString(signature)
-
-	// 将签名解码为字节数组
-	signatureBytes, err := hex.DecodeString(signatureHex)
-	if err != nil {
-		fmt.Println("签名解码失败：", err)
-		return "", err
-	}
-
-	// 从字节数组中提取r和s值
-	rBytes := signatureBytes[:32]
-	sBytes := signatureBytes[32:]
-	rInt := new(big.Int).SetBytes(rBytes)
-	sInt := new(big.Int).SetBytes(sBytes)
-
-	// 通过r、s和v值创建以太坊签名
-	ethSignature := append(rInt.Bytes(), sInt.Bytes()...)
-	ethSignature = append(ethSignature, 0)
-	originalV := recoverV(rInt, sInt, messageHash.Bytes(), common.BytesToAddress(publicKeyToAddressBytes(pubKey)))
-	ethSignature[64] = originalV + 27
-
-	return "0x" + hex.EncodeToString(ethSignature), err
-}
-
-func recoverV(r, s *big.Int, hash []byte, address common.Address) uint8 {
-	ethSignature := append(r.Bytes(), s.Bytes()...)
-	for i := uint8(0); i < 4; i++ {
-		sign2 := append(ethSignature, i)
-		uncompressedPubKey, err := crypto.Ecrecover(hash, sign2)
-		if err != nil {
-			continue
-		}
-		pubKey, _ := crypto.UnmarshalPubkey(uncompressedPubKey)
-		if bytes.Equal(address.Bytes(), crypto.PubkeyToAddress(*pubKey).Bytes()) {
-			return i
-		}
-	}
-	return 0
 }
