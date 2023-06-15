@@ -14,13 +14,6 @@ import (
 	"math/big"
 )
 
-type KeyStep3DataShare struct {
-	Id        int
-	ShareI    *big.Int        // key share
-	PublicKey *curves.ECPoint // PublicKey
-	ChainCode string          // chaincode for derivation, no longer change when update
-}
-
 type ECDSAKeyCommon struct {
 	preParamsStr string
 	curve        *secp256k1.KoblitzCurve

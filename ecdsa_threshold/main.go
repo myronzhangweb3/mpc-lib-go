@@ -17,36 +17,31 @@ import (
 )
 
 func main() {
-	// 初始化双方私钥
-	p1FromKey := &model.ECDSAKeyFrom{}
-	p2ToKey := &model.ECDSAKeyTo{}
-	p1FromKey.NewEcdsaKey()
-	p2ToKey.NewEcdsaKey()
+	c := &model.ECDSAKeyCommon{}
+	c.NewEcdsaKey()
 
-	// 生成三方密钥的数据 ShareI字段为私钥
-	p1FromPrivateData, p2ToPrivateData, p3PrivateData, err := p1FromKey.GenKeyStep3DataForPartners()
+	// 生成三方密钥的数据 ShareI字段为私密字段
+	p1FromKeyStep3Data, p2ToKeyStep3Data, p3KeyStep3Data, err := c.GenKeyStep3DataForPartners()
 	if err != nil {
 		panic(err)
 	}
-	p1FromKey.KeyStep3Data = p1FromPrivateData
-	p2ToKey.KeyStep3Data = p2ToPrivateData
 	// 签名验证
-	signByRefreshKey(p1FromPrivateData, p2ToPrivateData)
+	signByKey(p1FromKeyStep3Data, p2ToKeyStep3Data)
 
 	// 刷新 根据p1FromPrivateData、p3PrivateData和p2ToPrivateData的公钥重新生成ShareI
-	p1MsgFromDataNew, p2MsgToDataNew, _ := p1FromKey.RefreshKey(
+	p1FromKeyStep3DataNew, p2FromKeyStep3DataNew, _ := c.RefreshKey(
 		[2]int{1, 3},
-		[3]*tss.KeyStep3Data{p1FromPrivateData, {PublicKey: p2ToPrivateData.PublicKey}, p3PrivateData},
+		[3]*tss.KeyStep3Data{p1FromKeyStep3Data, {PublicKey: p2ToKeyStep3Data.PublicKey}, p3KeyStep3Data},
 	)
-	// 签名验证
-	signByRefreshKey(p1MsgFromDataNew, p2MsgToDataNew)
+	// 使用刷新后的私钥签名验证
+	signByKey(p1FromKeyStep3DataNew, p2FromKeyStep3DataNew)
 
 	// 使用旧私钥签名验证
-	signByRefreshKey(p1FromPrivateData, p2ToPrivateData)
+	signByKey(p1FromKeyStep3Data, p2ToKeyStep3Data)
 }
 
-// signByRefreshKey From和To只需要对方的ID即可，不需要其他内容
-func signByRefreshKey(p1MsgFromData *tss.KeyStep3Data, p2MsgToData *tss.KeyStep3Data) {
+// signByKey From和To只需要对方的ID即可，不需要其他内容
+func signByKey(p1MsgFromData *tss.KeyStep3Data, p2MsgToData *tss.KeyStep3Data) {
 	// 初始化双方私钥
 	p1FromKey := &model.ECDSAKeyFrom{}
 	p2ToKey := &model.ECDSAKeyTo{}
@@ -104,7 +99,7 @@ func signByRefreshKey(p1MsgFromData *tss.KeyStep3Data, p2MsgToData *tss.KeyStep3
 	fmt.Println("r: " + hexutil.EncodeBig(r))
 	fmt.Println("s: " + hexutil.EncodeBig(s))
 	fmt.Println("v: " + fmt.Sprintf("%v", signBytes[64]))
-	fmt.Println("=========verify by solidity==========")
+	fmt.Println()
 }
 
 func getSignByRS(pubKey *ecdsa.PublicKey, messageHash common.Hash, r *big.Int, s *big.Int) (string, error) {
