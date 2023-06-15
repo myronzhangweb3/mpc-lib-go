@@ -134,6 +134,7 @@ func getSignByRS(pubKey *ecdsa.PublicKey, messageHash common.Hash, r *big.Int, s
 func recoverV(r, s *big.Int, hash []byte, address common.Address) uint8 {
 	ethSignature := append(r.Bytes(), s.Bytes()...)
 	for i := uint8(0); i < 4; i++ {
+		// TODO 是否有更好的方法确认v值
 		sign2 := append(ethSignature, i)
 		uncompressedPubKey, err := crypto.Ecrecover(hash, sign2)
 		if err != nil {
