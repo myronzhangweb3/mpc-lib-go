@@ -29,12 +29,12 @@ func main() {
 	signByKey(p1FromKeyStep3Data, p2ToKeyStep3Data)
 
 	// 刷新 根据p1FromPrivateData、p3PrivateData和p2ToPrivateData的公钥重新生成ShareI
-	p1FromKeyStep3DataNew, p2FromKeyStep3DataNew, _ := c.RefreshKey(
+	p1FromKeyStep3DataNew, p2ToKeyStep3DataNew, _ := c.RefreshKey(
 		[2]int{1, 3},
 		[3]*tss.KeyStep3Data{p1FromKeyStep3Data, {PublicKey: p2ToKeyStep3Data.PublicKey}, p3KeyStep3Data},
 	)
 	// 使用刷新后的私钥签名验证
-	signByKey(p1FromKeyStep3DataNew, p2FromKeyStep3DataNew)
+	signByKey(p1FromKeyStep3DataNew, p2ToKeyStep3DataNew)
 
 	// 使用旧私钥签名验证
 	signByKey(p1FromKeyStep3Data, p2ToKeyStep3Data)
@@ -85,7 +85,7 @@ func signByKey(p1MsgFromData *tss.KeyStep3Data, p2MsgToData *tss.KeyStep3Data) {
 	// 第二步
 	// 发起方zk schnorr验证接收方的证明，然后给出k1*G的承诺
 	proof, cmtD, _ := p1.Step2(bobProof, R2)
-	// 接收方zk schnorr验证发起方的证明，
+	// 接收方zk schnorr验证发起方的证明，然后计算签名密文
 	E_k2_h_xr, _ := p2.Step2(cmtD, proof)
 	// 第三步：发起方使用同态加密算法解密获得签名，最后验证签名是否正确
 	r, s, _ := p1.Step3(E_k2_h_xr)
