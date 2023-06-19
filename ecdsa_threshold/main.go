@@ -27,17 +27,23 @@ func main() {
 	}
 	// 签名验证
 	signByKey(p1FromKeyStep3Data, p2ToKeyStep3Data)
+	signByKey(p1FromKeyStep3Data, p3KeyStep3Data)
+	signByKey(p2ToKeyStep3Data, p3KeyStep3Data)
 
 	// 刷新 根据p1FromPrivateData、p3PrivateData和p2ToPrivateData的公钥重新生成ShareI
-	p1FromKeyStep3DataNew, p2ToKeyStep3DataNew, _ := c.RefreshKey(
+	p1FromKeyStep3DataNew, p2ToKeyStep3DataNew, p3ToKeyStep3DataNew := c.RefreshKey(
 		[2]int{1, 3},
 		[3]*tss.KeyStep3Data{p1FromKeyStep3Data, {PublicKey: p2ToKeyStep3Data.PublicKey}, p3KeyStep3Data},
 	)
 	// 使用刷新后的私钥签名验证
 	signByKey(p1FromKeyStep3DataNew, p2ToKeyStep3DataNew)
+	signByKey(p1FromKeyStep3DataNew, p3ToKeyStep3DataNew)
+	signByKey(p2ToKeyStep3DataNew, p3ToKeyStep3DataNew)
 
 	// 使用旧私钥签名验证
 	signByKey(p1FromKeyStep3Data, p2ToKeyStep3Data)
+	signByKey(p1FromKeyStep3Data, p3KeyStep3Data)
+	signByKey(p2ToKeyStep3Data, p3KeyStep3Data)
 }
 
 // signByKey From和To只需要对方的ID即可，不需要其他内容
