@@ -14,22 +14,20 @@ import (
 )
 
 // https://goerli.etherscan.io/tx/0x9be9369eacef39729431418385f8a0f040b9f5385d1e1f075189b27023c71da3
-//
 func TestSendMainToken(t *testing.T) {
 	chainId := big.NewInt(80001)
 	toAddress := common.HexToAddress("0xed5449e7ffec8bbb53c8a0d1ec7671fe2a44b719")
-	//toAddress := common.HexToAddress("0xBDeE6Cc0277cef5671bCd8B15AA4Fa9CDd41A058")
-	tx := types.NewTx(&types.LegacyTx{
-		//ChainID:   chainId,
-		Nonce:    0,
-		To:       &toAddress,
-		Value:    big.NewInt(0 * 1e8),
-		Gas:      21000,
-		GasPrice: big.NewInt(50000000000),
-		//GasFeeCap: big.NewInt(38000000000),
-		Data: []byte{},
+	tx := types.NewTx(&types.DynamicFeeTx{
+		ChainID:   chainId,
+		Nonce:     2,
+		To:        &toAddress,
+		Value:     big.NewInt(0 * 1e8),
+		Gas:       21000,
+		GasTipCap: big.NewInt(38000000000),
+		GasFeeCap: big.NewInt(38000000000),
+		Data:      []byte{},
 	})
-	s := types.NewEIP155Signer(chainId)
+	s := types.NewLondonSigner(chainId)
 	h := s.Hash(tx)
 
 	p1FromKeyStep3Data := tss.KeyStep3Data{}
