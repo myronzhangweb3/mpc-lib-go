@@ -16,6 +16,11 @@ import (
 	"okx-threshold-lib-demo/ecdsa_threshold/model"
 )
 
+//1. 终端调用GenerateDeviceData()，生成三份数据data1,data2,data3，data1存储至服务器，data2存储至 终端，data3存储至云端;
+//2. 终端调用NewKeyPair()生成并加密存储公私钥paiPrivateKey和paiPublickey(可以设置策略更新公私钥);
+//3. 终端可以调用GetAddress(paiPrivateKey,data1,data2)获得钱包地址;
+//4. 终端可以调用Sign(content,paiPrivateKey,data1,data2)签名数据;
+//5. 终端可以调用Recover(data0,data2)刷新三份数据;
 func main() {
 	c := &model.ECDSAKeyCommon{}
 	c.NewEcdsaKey()
@@ -26,9 +31,11 @@ func main() {
 		panic(err)
 	}
 	// 签名验证
-	signByKey(p1FromKeyStep3Data, p2ToKeyStep3Data)
-	signByKey(p1FromKeyStep3Data, p3KeyStep3Data)
-	signByKey(p2ToKeyStep3Data, p3KeyStep3Data)
+	messageHash := crypto.Keccak256Hash([]byte("hello"))
+	messageHashBytes := messageHash.Bytes()
+	signByKey(p1FromKeyStep3Data, p2ToKeyStep3Data, messageHashBytes)
+	signByKey(p1FromKeyStep3Data, p3KeyStep3Data, messageHashBytes)
+	signByKey(p2ToKeyStep3Data, p3KeyStep3Data, messageHashBytes)
 
 	// 刷新 根据p1FromPrivateData、p3PrivateData和p2ToPrivateData的公钥重新生成ShareI
 	p1FromKeyStep3DataNew, p2ToKeyStep3DataNew, p3ToKeyStep3DataNew := c.RefreshKey(
@@ -36,18 +43,19 @@ func main() {
 		[3]*tss.KeyStep3Data{p1FromKeyStep3Data, {PublicKey: p2ToKeyStep3Data.PublicKey}, p3KeyStep3Data},
 	)
 	// 使用刷新后的私钥签名验证
-	signByKey(p1FromKeyStep3DataNew, p2ToKeyStep3DataNew)
-	signByKey(p1FromKeyStep3DataNew, p3ToKeyStep3DataNew)
-	signByKey(p2ToKeyStep3DataNew, p3ToKeyStep3DataNew)
+	signByKey(p1FromKeyStep3DataNew, p2ToKeyStep3DataNew, messageHashBytes)
+	signByKey(p1FromKeyStep3DataNew, p3ToKeyStep3DataNew, messageHashBytes)
+	signByKey(p2ToKeyStep3DataNew, p3ToKeyStep3DataNew, messageHashBytes)
 
 	// 使用旧私钥签名验证
-	signByKey(p1FromKeyStep3Data, p2ToKeyStep3Data)
-	signByKey(p1FromKeyStep3Data, p3KeyStep3Data)
-	signByKey(p2ToKeyStep3Data, p3KeyStep3Data)
+	signByKey(p1FromKeyStep3Data, p2ToKeyStep3Data, messageHashBytes)
+	signByKey(p1FromKeyStep3Data, p3KeyStep3Data, messageHashBytes)
+	signByKey(p2ToKeyStep3Data, p3KeyStep3Data, messageHashBytes)
 }
 
 // signByKey From和To只需要对方的ID即可，不需要其他内容
-func signByKey(p1MsgFromData *tss.KeyStep3Data, p2MsgToData *tss.KeyStep3Data) {
+func signByKey(p1MsgFromData *tss.KeyStep3Data, p2MsgToData *tss.KeyStep3Data, messageHashBytes []byte) ([]byte, error) {
+	fmt.Println("start signByKey")
 	// 初始化双方私钥
 	p1FromKey := &model.ECDSAKeyFrom{}
 	p2ToKey := &model.ECDSAKeyTo{}
@@ -61,27 +69,26 @@ func signByKey(p1MsgFromData *tss.KeyStep3Data, p2MsgToData *tss.KeyStep3Data) {
 	// 发起方向接收方请求共同签名，需要初始化必要的密钥，准备向接收方发送消息
 	message, err := p1FromKey.KeyGenRequestMessage(p2MsgToData.Id)
 	if err != nil {
-		panic(err)
+		return []byte(""), err
 	}
 
 	// 接收方根据消息和发起方公开的数据生成接收方的私有数据SaveData
 	err = p2ToKey.GenSaveData(message, p1FromKey.KeyStep3Data.Id)
 	if err != nil {
-		panic(err)
+		return []byte(""), err
 	}
 
 	// 接收方根据私有数据SaveData生成阈值签名的公钥
 	pubKey, x2, err := p2ToKey.GenPublicKeyAndShareI()
 	if err != nil {
-		panic(err)
+		return []byte(""), err
 	}
 
 	// 发起方生成随机数k1
-	messageHash := crypto.Keccak256Hash([]byte("hello"))
-	p1 := sign.NewP1(pubKey, hex.EncodeToString(messageHash.Bytes()), p1FromKey.PaillierPrivateKey)
+	p1 := sign.NewP1(pubKey, hex.EncodeToString(messageHashBytes), p1FromKey.PaillierPrivateKey)
 
 	// 接收方生成随机数k2
-	p2 := sign.NewP2(x2, p2ToKey.SaveData.E_x1, pubKey, p2ToKey.SaveData.PaiPubKey, hex.EncodeToString(messageHash.Bytes()))
+	p2 := sign.NewP2(x2, p2ToKey.SaveData.E_x1, pubKey, p2ToKey.SaveData.PaiPubKey, hex.EncodeToString(messageHashBytes))
 
 	// 第一步
 	// 发起方根据k1计算椭圆曲线点(k1*G,公钥)
@@ -98,14 +105,15 @@ func signByKey(p1MsgFromData *tss.KeyStep3Data, p2MsgToData *tss.KeyStep3Data) {
 
 	fmt.Println("=========verify by solidity==========")
 	fmt.Println("Address:", "0x"+hex.EncodeToString(publicKeyToAddressBytes(pubKey)))
-	fmt.Println("Message Hash: " + messageHash.Hex())
-	signHex, _ := getSignByRS(pubKey, messageHash, r, s)
-	signBytes, _ := hex.DecodeString(signHex[2:])
-	fmt.Println("Signature: " + signHex)
+	fmt.Println("Message Hash: ", "0x"+hex.EncodeToString(messageHashBytes))
+	signHex, _ := getSignByRS(pubKey, common.BytesToHash(messageHashBytes), r, s)
+	signBytes, _ := hex.DecodeString(signHex)
+	fmt.Println("Signature: 0x" + signHex)
 	fmt.Println("r: " + hexutil.EncodeBig(r))
 	fmt.Println("s: " + hexutil.EncodeBig(s))
 	fmt.Println("v: " + fmt.Sprintf("%v", signBytes[64]))
 	fmt.Println()
+	return signBytes, nil
 }
 
 func getSignByRS(pubKey *ecdsa.PublicKey, messageHash common.Hash, r *big.Int, s *big.Int) (string, error) {
@@ -132,15 +140,15 @@ func getSignByRS(pubKey *ecdsa.PublicKey, messageHash common.Hash, r *big.Int, s
 	ethSignature := append(rInt.Bytes(), sInt.Bytes()...)
 	ethSignature = append(ethSignature, 0)
 	originalV := recoverV(rInt, sInt, messageHash.Bytes(), common.BytesToAddress(publicKeyToAddressBytes(pubKey)))
-	ethSignature[64] = originalV + 27
+	ethSignature[64] = originalV
+	//ethSignature[64] = originalV + 27
 
-	return "0x" + hex.EncodeToString(ethSignature), err
+	return hex.EncodeToString(ethSignature), err
 }
 
 func recoverV(r, s *big.Int, hash []byte, address common.Address) uint8 {
 	ethSignature := append(r.Bytes(), s.Bytes()...)
 	for i := uint8(0); i < 4; i++ {
-		// TODO 是否有更好的方法确认v值
 		sign2 := append(ethSignature, i)
 		uncompressedPubKey, err := crypto.Ecrecover(hash, sign2)
 		if err != nil {
