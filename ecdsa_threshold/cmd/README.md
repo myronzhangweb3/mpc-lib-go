@@ -73,8 +73,8 @@ The terminal can call Recover to refresh three copies of data
 
 ```shell
 cd recover
-# params: data1 data2 data3  
-# output: new data1 data2 data3
+# params: data1 data2 data3 newKeyDirPath
+# output: new data1 data2 data3 files
 go run main.go ../../key/p1JsonData.json ../../key/p2JsonData.json ../../key/p3JsonData.json ../../key_new
 ```
 
