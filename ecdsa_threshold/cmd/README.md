@@ -17,7 +17,9 @@ go run main.go ../../key
 
 The terminal can call GetAddress(data1,data2) to get the wallet address
 
+
 ⚠️ TODO: need to split the data1 and data2 to two terminal. They will communicate using HTTP API.
+
 
 ```shell    
 cd get_address
