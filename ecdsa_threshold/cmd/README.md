@@ -65,7 +65,9 @@ go run main.go '80001' '0x27a01491d86F3F3b3085a0Ebe3F640387DBdb0EC' '1000000' '4
 
 The terminal can call Recover to refresh three copies of data
 
+
 ⚠️ TODO: need to split the data1 and data2 to two terminal. They will communicate using HTTP API.
+
 
 ```shell
 cd recover
