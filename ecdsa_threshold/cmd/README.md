@@ -17,9 +17,7 @@ go run main.go ../../key
 
 The terminal can call GetAddress(data1,data2) to get the wallet address
 
-
-⚠️ TODO: need to split the data1 and data2 to two terminal. They will communicate using HTTP API.
-
+🤔 TODO: need to split the data1 and data2 to two terminal. They will communicate using HTTP API.
 
 ```shell    
 cd get_address
@@ -32,7 +30,7 @@ go run main.go ../../key/p1JsonData.json ../../key/p2JsonData.json
 
 The terminal can call Sign(content,data1,data2) to sign the data
 
-⚠️ TODO: need to split the data1 and data2 to two terminal. They will communicate using HTTP API.
+🤔 TODO: need to split the data1 and data2 to two terminal. They will communicate using HTTP API.
 
 ### 3.1 Build tx
 
@@ -45,7 +43,7 @@ go run main.go '80001' '0x27a01491d86F3F3b3085a0Ebe3F640387DBdb0EC' '1000000' '4
 
 ### 3.2 Sign tx
 
-⚠️ TODO: need to split the data1 and data2 to two terminal. They will communicate using HTTP API.
+🤔 TODO: need to split the data1 and data2 to two terminal. They will communicate using HTTP API.
 
 ```shell
 cd sign
@@ -67,9 +65,7 @@ go run main.go '80001' '0x27a01491d86F3F3b3085a0Ebe3F640387DBdb0EC' '1000000' '4
 
 The terminal can call Recover to refresh three copies of data
 
-
-⚠️ TODO: need to split the data1 and data2 to two terminal. They will communicate using HTTP API.
-
+🤔 TODO: need to split the data1 and data2 to two terminal. They will communicate using HTTP API.
 
 ```shell
 cd recover
