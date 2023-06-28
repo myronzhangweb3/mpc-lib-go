@@ -1,11 +1,18 @@
-package utils
+package common_utils
 
 import (
 	"bufio"
 	"os"
+	"path/filepath"
 )
 
 func Save2File(filePath, data string) error {
+	// 创建目录
+	err := os.MkdirAll(filepath.Dir(filePath), 0755)
+	if err != nil {
+		return err
+	}
+
 	file, err := os.Create(filePath)
 	if err != nil {
 		return err
