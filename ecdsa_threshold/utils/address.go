@@ -7,7 +7,7 @@ import (
 )
 
 func GetAddress(p1MsgFromData *tss.KeyStep3Data, p2MsgToData *tss.KeyStep3Data) (*common.Address, error) {
-	// 初始化双方私钥
+	// Initialize both parties' private keys
 	p1FromKey := &model.ECDSAKeyFrom{}
 	p2ToKey := &model.ECDSAKeyTo{}
 
@@ -17,19 +17,20 @@ func GetAddress(p1MsgFromData *tss.KeyStep3Data, p2MsgToData *tss.KeyStep3Data) 
 	p1FromKey.KeyStep3Data = p1MsgFromData
 	p2ToKey.KeyStep3Data = p2MsgToData
 
-	// 发起方向接收方请求共同签名，需要初始化必要的密钥，准备向接收方发送消息
+	// The originator requests a co-signature from the receiver and needs to initialize the necessary keys in preparation for sending the message to the receiver
 	message, err := p1FromKey.KeyGenRequestMessage(p2MsgToData.Id)
 	if err != nil {
 		return nil, err
 	}
 
-	// 接收方根据消息和发起方公开的数据生成接收方的私有数据SaveData
+	// TODO p1 send message to p2 via API
+	// The receiver generates the receiver's private data SaveData based on the message and the initiator's public data
 	err = p2ToKey.GenSaveData(message, p1FromKey.KeyStep3Data.Id)
 	if err != nil {
 		return nil, err
 	}
 
-	// 接收方根据私有数据SaveData生成阈值签名的公钥
+	// The recipient generates a public key with a threshold signature based on the private data SaveData
 	pubKey, _, err := p2ToKey.GenPublicKeyAndShareI()
 	if err != nil {
 		return nil, err

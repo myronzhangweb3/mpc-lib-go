@@ -3,7 +3,6 @@ package model
 import (
 	"crypto/ecdsa"
 	"encoding/json"
-	"fmt"
 	"github.com/decred/dcrd/dcrec/secp256k1/v2"
 	"github.com/okx/threshold-lib/crypto/curves"
 	"github.com/okx/threshold-lib/crypto/paillier"
@@ -31,7 +30,6 @@ func (e *ECDSAKeyCommon) NewEcdsaKey() *ECDSAKeyCommon {
 
 // GenKeyStep3DataForPartners generates private data for partners
 func (e *ECDSAKeyCommon) GenKeyStep3DataForPartners() (*tss.KeyStep3Data, *tss.KeyStep3Data, *tss.KeyStep3Data, error) {
-	fmt.Println("start to generate key step3 data for partners")
 	setUp1 := dkg.NewSetUp(1, 3, e.curve)
 	setUp2 := dkg.NewSetUp(2, 3, e.curve)
 	setUp3 := dkg.NewSetUp(3, 3, e.curve)

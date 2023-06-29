@@ -14,9 +14,9 @@ import (
 	"okx-threshold-lib-demo/ecdsa_threshold/model"
 )
 
-// SignByKey From和To只需要对方的ID即可，不需要其他内容
+// SignByKey Only for unit test
 func SignByKey(p1MsgFromData *tss.KeyStep3Data, p2MsgToData *tss.KeyStep3Data, messageHashBytes []byte) ([]byte, error) {
-	// 初始化双方私钥
+	// Initialize both parties' private keys
 	p1FromKey := &model.ECDSAKeyFrom{}
 	p2ToKey := &model.ECDSAKeyTo{}
 
@@ -26,75 +26,81 @@ func SignByKey(p1MsgFromData *tss.KeyStep3Data, p2MsgToData *tss.KeyStep3Data, m
 	p1FromKey.KeyStep3Data = p1MsgFromData
 	p2ToKey.KeyStep3Data = p2MsgToData
 
-	// 发起方向接收方请求共同签名，需要初始化必要的密钥，准备向接收方发送消息
+	// The initiator requests a co-signature from the receiver and needs to initialize the necessary keys in preparation for sending the message to the receiver
 	message, err := p1FromKey.KeyGenRequestMessage(p2MsgToData.Id)
 	if err != nil {
 		return []byte(""), err
 	}
 
-	// 接收方根据消息和发起方公开的数据生成接收方的私有数据SaveData
+	// TODO p1 send message to p2 via API
+	// The receiver generates the receiver's private data SaveData based on the message and the initiator's public data
 	err = p2ToKey.GenSaveData(message, p1FromKey.KeyStep3Data.Id)
 	if err != nil {
 		return []byte(""), err
 	}
 
-	// 接收方根据私有数据SaveData生成阈值签名的公钥
+	// The receiver generates the threshold signed public key based on the private data SaveData
 	pubKey, x2, err := p2ToKey.GenPublicKeyAndShareI()
 	if err != nil {
 		return []byte(""), err
 	}
 
-	// 发起方生成随机数k1
+	// TODO p2 send pubKey to p1 via API
+	// The initiator generates a random number k1
 	p1 := sign.NewP1(pubKey, hex.EncodeToString(messageHashBytes), p1FromKey.PaillierPrivateKey)
 
-	// 接收方生成随机数k2
+	// The receiver generates a random number k2
 	p2 := sign.NewP2(x2, p2ToKey.SaveData.E_x1, pubKey, p2ToKey.SaveData.PaiPubKey, hex.EncodeToString(messageHashBytes))
 
-	// 第一步
-	// 发起方根据k1计算椭圆曲线点(k1*G,公钥)
+	// First step
+	// The initiator calculates the elliptic curve point (k1*G,public key) based on k1
 	commit, _ := p1.Step1()
-	// 接收方根据k2计算椭圆曲线点(k2*G,公钥)，并给出k2*G的承诺
+	// TODO p1 send commit to p2 via API
+	// The receiver computes the elliptic curve point (k2*G,public key) based on k2 and gives the commitment of k2*G
 	bobProof, R2, _ := p2.Step1(commit)
-	// 第二步
-	// 发起方zk schnorr验证接收方的证明，然后给出k1*G的承诺
+	// Step 2
+	// TODO p2 send bobProof and R2 to p1 via API
+	// The initiator zk schnorr verifies the receiver's proof and then gives a k1*G promise
 	proof, cmtD, _ := p1.Step2(bobProof, R2)
-	// 接收方zk schnorr验证发起方的证明，然后计算签名密文
+	// TODO p1 send proof and cmtD to p2 via API
+	// The receiver zk schnorr verifies the initiator's proof and then computes the signed cipher
 	E_k2_h_xr, _ := p2.Step2(cmtD, proof)
-	// 第三步：发起方使用同态加密算法解密获得签名，最后验证签名是否正确
+	// Step 3: The initiator decrypts the signature using the homomorphic encryption algorithm and finally verifies that the signature is correct
+	// TODO p2 send E_k2_h_xr to p1 via API
 	r, s, _ := p1.Step3(E_k2_h_xr)
 
-	signHex, _ := getSignByRS(pubKey, common.BytesToHash(messageHashBytes), r, s)
-	signBytes, _ := hex.DecodeString(signHex)
+	signHex, err := getSignByRS(pubKey, common.BytesToHash(messageHashBytes), r, s)
+	if err != nil {
+		return []byte(""), err
+	}
+	signBytes, err := hex.DecodeString(signHex)
+	if err != nil {
+		return []byte(""), err
+	}
 
-	//fmt.Println("Address:", "0x"+hex.EncodeToString(publicKeyToAddressBytes(pubKey)))
-	//fmt.Println("Message Hash: ", "0x"+hex.EncodeToString(messageHashBytes))
-	//fmt.Println("Signature: 0x" + signHex)
-	//fmt.Println("r: " + hexutil.EncodeBig(r))
-	//fmt.Println("s: " + hexutil.EncodeBig(s))
-	//fmt.Println("v: " + fmt.Sprintf("%v", signBytes[64]))
 	return signBytes, nil
 }
 
 func getSignByRS(pubKey *ecdsa.PublicKey, messageHash common.Hash, r *big.Int, s *big.Int) (string, error) {
-	// 将签名转换为字节数组
+	// Convert the signature to a byte array
 	signature := append(r.Bytes(), s.Bytes()...)
 
-	// 将签名编码为十六进制字符串
+	// encode the signature as a hexadecimal string
 	signatureHex := hex.EncodeToString(signature)
 
-	// 将签名解码为字节数组
+	// Decode the signature into a byte array
 	signatureBytes, err := hex.DecodeString(signatureHex)
 	if err != nil {
 		return "", err
 	}
 
-	// 从字节数组中提取r和s值
+	// Extract the r and s values from the byte array
 	rBytes := signatureBytes[:32]
 	sBytes := signatureBytes[32:]
 	rInt := new(big.Int).SetBytes(rBytes)
 	sInt := new(big.Int).SetBytes(sBytes)
 
-	// 通过r、s和v值创建以太坊签名
+	// Create an ethereum signature from r, s and v values
 	ethSignature := append(rInt.Bytes(), sInt.Bytes()...)
 	ethSignature = append(ethSignature, 0)
 	originalV := recoverV(rInt, sInt, messageHash.Bytes(), common.BytesToAddress(publicKeyToAddressBytes(pubKey)))

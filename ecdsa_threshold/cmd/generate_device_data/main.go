@@ -31,5 +31,7 @@ func main() {
 		panic(err)
 	}
 
+	// TODO need output three parties's public data to a file and then all parties save them to their local devices
+
 	fmt.Println("Success. Please check the key file in " + os.Args[1])
 }
