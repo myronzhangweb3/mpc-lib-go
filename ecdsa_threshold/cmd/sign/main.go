@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/hex"
 	"fmt"
-	"okx-threshold-lib-demo/ecdsa_threshold/utils"
+	utils2 "okx-threshold-lib-demo/ecdsa_threshold/source/utils"
 	"os"
 )
 
@@ -12,11 +12,11 @@ func main() {
 		panic("please input p1key and p2key file paths and sign content")
 	}
 
-	p1FromKeyStep3Data, err := utils.GenKeyStep3DataByFile(os.Args[1])
+	p1FromKeyStep3Data, err := utils2.GenKeyStep3DataByFile(os.Args[1])
 	if err != nil {
 		panic(err)
 	}
-	p2FromKeyStep3Data, err := utils.GenKeyStep3DataByFile(os.Args[2])
+	p2FromKeyStep3Data, err := utils2.GenKeyStep3DataByFile(os.Args[2])
 	if err != nil {
 		panic(err)
 	}
@@ -25,7 +25,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	signBytes, err := utils.SignByKey(p1FromKeyStep3Data, p2FromKeyStep3Data, messageHashHexStr)
+	signBytes, err := utils2.SignByKey(p1FromKeyStep3Data, p2FromKeyStep3Data, messageHashHexStr)
 	if err != nil {
 		panic(err)
 	}

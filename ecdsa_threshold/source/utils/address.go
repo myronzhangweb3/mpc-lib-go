@@ -3,7 +3,7 @@ package utils
 import (
 	"crypto/ecdsa"
 	"github.com/okx/threshold-lib/tss"
-	"okx-threshold-lib-demo/ecdsa_threshold/model"
+	"okx-threshold-lib-demo/ecdsa_threshold/source/model"
 )
 
 func GetPubKey(p1MsgFromData *tss.KeyStep3Data, p2MsgToData *tss.KeyStep3Data) (*ecdsa.PublicKey, error) {

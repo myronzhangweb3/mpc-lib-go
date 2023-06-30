@@ -11,7 +11,7 @@ import (
 	"github.com/okx/threshold-lib/tss/ecdsa/sign"
 	"golang.org/x/crypto/sha3"
 	"math/big"
-	"okx-threshold-lib-demo/ecdsa_threshold/model"
+	"okx-threshold-lib-demo/ecdsa_threshold/source/model"
 )
 
 // SignByKey Only for unit test

@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"okx-threshold-lib-demo/ecdsa_threshold/utils"
+	"okx-threshold-lib-demo/ecdsa_threshold/source/utils"
 	"os"
 )
 

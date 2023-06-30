@@ -11,8 +11,8 @@ import (
 	"github.com/okx/threshold-lib/tss"
 	"github.com/okx/threshold-lib/tss/ecdsa/sign"
 	"net/http"
-	"okx-threshold-lib-demo/ecdsa_threshold/model"
-	"okx-threshold-lib-demo/ecdsa_threshold/utils"
+	"okx-threshold-lib-demo/ecdsa_threshold/source/model"
+	utils2 "okx-threshold-lib-demo/ecdsa_threshold/source/utils"
 	"okx-threshold-lib-demo/ecdsa_threshold/web_server/server/global"
 	"path/filepath"
 )
@@ -59,7 +59,7 @@ func BindUserAndP2(c *gin.Context) {
 
 	p2ToKey := &model.ECDSAKeyTo{}
 	p2ToKey.NewEcdsaKey()
-	p2ToKey.KeyStep3Data, err = utils.GenKeyStep3DataByFile(filepath.Join(global.RootDir, params.P2KeyFileName))
+	p2ToKey.KeyStep3Data, err = utils2.GenKeyStep3DataByFile(filepath.Join(global.RootDir, params.P2KeyFileName))
 	if err != nil {
 		jsonResponse(c, nil, err)
 		return
@@ -98,9 +98,9 @@ func GetAddressMessageHandler(c *gin.Context) {
 		jsonResponse(c, nil, err)
 		return
 	}
-	pubKeyBytes := utils.MarshalJSONCDSAPubKey(pubKey)
+	pubKeyBytes := utils2.MarshalJSONCDSAPubKey(pubKey)
 
-	address := common.BytesToAddress(utils.PublicKeyToAddressBytes(pubKey))
+	address := common.BytesToAddress(utils2.PublicKeyToAddressBytes(pubKey))
 	jsonResponse(c, struct {
 		PubKey  string `json:"pub_key"`
 		Address string `json:"address"`
@@ -151,7 +151,7 @@ func P2Step1Handler(c *gin.Context) {
 		jsonResponse(c, nil, errors.New(fmt.Sprintf("user(%s) not register", params.UserName)))
 		return
 	}
-	commitment := utils.Str2BigInt(params.Commitment)
+	commitment := utils2.Str2BigInt(params.Commitment)
 	proof, ecpoint, err := p2Content.Step1(&commitment)
 	if err != nil {
 		jsonResponse(c, nil, err)

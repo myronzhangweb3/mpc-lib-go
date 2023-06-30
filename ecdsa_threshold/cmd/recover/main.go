@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 	"github.com/okx/threshold-lib/tss"
-	"okx-threshold-lib-demo/ecdsa_threshold/model"
-	"okx-threshold-lib-demo/ecdsa_threshold/utils"
+	"okx-threshold-lib-demo/ecdsa_threshold/source/model"
+	"okx-threshold-lib-demo/ecdsa_threshold/source/utils"
 	"os"
 )
 

@@ -10,7 +10,7 @@ import (
 	"github.com/okx/threshold-lib/tss"
 	"math/big"
 	"okx-threshold-lib-demo/common_utils"
-	"okx-threshold-lib-demo/ecdsa_threshold/model"
+	"okx-threshold-lib-demo/ecdsa_threshold/source/model"
 	"testing"
 )
 

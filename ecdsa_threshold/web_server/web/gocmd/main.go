@@ -10,8 +10,8 @@ import (
 	"github.com/okx/threshold-lib/tss"
 	tsssign "github.com/okx/threshold-lib/tss/ecdsa/sign"
 	"math/big"
-	"okx-threshold-lib-demo/ecdsa_threshold/model"
-	"okx-threshold-lib-demo/ecdsa_threshold/utils"
+	"okx-threshold-lib-demo/ecdsa_threshold/source/model"
+	utils2 "okx-threshold-lib-demo/ecdsa_threshold/source/utils"
 	"syscall/js"
 )
 
@@ -49,7 +49,7 @@ func generateDeviceData(this js.Value, i []js.Value) (response interface{}) {
 		response = handlerResponse2Str()(response)
 	}()
 
-	p1FromKeyStep3Data, p2FromKeyStep3Data, p3FromKeyStep3Data, err := utils.GenerateDeviceData()
+	p1FromKeyStep3Data, p2FromKeyStep3Data, p3FromKeyStep3Data, err := utils2.GenerateDeviceData()
 
 	globalP1FromKey.KeyStep3Data = p1FromKeyStep3Data
 
@@ -104,7 +104,7 @@ func initP1KeyData(this js.Value, i []js.Value) (response interface{}) {
 
 	p1KeyJson := i[0].String()
 
-	key, err := utils.Json2TssKeyStep3Data(p1KeyJson)
+	key, err := utils2.Json2TssKeyStep3Data(p1KeyJson)
 	if err != nil {
 		response = &WASMResponse{
 			Code: ResponseError,
@@ -135,7 +135,7 @@ func initPubKey(this js.Value, i []js.Value) (response interface{}) {
 		return
 	}
 
-	pubKey := utils.UnMarshalJSONCDSAPubKey(pubKeyJson)
+	pubKey := utils2.UnMarshalJSONCDSAPubKey(pubKeyJson)
 	response = &WASMResponse{
 		Code: ResponseSuccess,
 		Data: true,
@@ -192,7 +192,7 @@ func p1Step2(this js.Value, i []js.Value) (response interface{}) {
 	schnorrProofJson := i[0].String()
 	curvesECPointJson := i[1].String()
 
-	schnorrProof, err := utils.Json2SchnorrProof(schnorrProofJson)
+	schnorrProof, err := utils2.Json2SchnorrProof(schnorrProofJson)
 	if err != nil {
 		response = &WASMResponse{
 			Code: ResponseError,
@@ -200,7 +200,7 @@ func p1Step2(this js.Value, i []js.Value) (response interface{}) {
 		}
 		return
 	}
-	curvesECPoint, err := utils.Json2CurvesECPoint(curvesECPointJson)
+	curvesECPoint, err := utils2.Json2CurvesECPoint(curvesECPointJson)
 	if err != nil {
 		response = &WASMResponse{
 			Code: ResponseError,
@@ -235,7 +235,7 @@ func p1Step3(this js.Value, i []js.Value) (response interface{}) {
 
 	E_k2_h_xr_Str := i[0].String()
 
-	r, s, err := globalP1.Step3(utils.Str2BigInt(E_k2_h_xr_Str))
+	r, s, err := globalP1.Step3(utils2.Str2BigInt(E_k2_h_xr_Str))
 	if err != nil {
 		response = &WASMResponse{
 			Code: ResponseError,
@@ -244,7 +244,7 @@ func p1Step3(this js.Value, i []js.Value) (response interface{}) {
 		return
 	}
 
-	signHex, _ := utils.GetSignByRS(globalECDSAPubKey, common.HexToHash("85eb8167756e6513cb3c6c1041e99615db0df6c72c1a8a94e144fc0fc626884a"), r, s)
+	signHex, _ := utils2.GetSignByRS(globalECDSAPubKey, common.HexToHash("85eb8167756e6513cb3c6c1041e99615db0df6c72c1a8a94e144fc0fc626884a"), r, s)
 
 	response = &WASMResponse{
 		Code: ResponseSuccess,
