@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/ethereum/go-ethereum/common"
 	"okx-threshold-lib-demo/ecdsa_threshold/utils"
 	"os"
 )
@@ -20,10 +21,7 @@ func main() {
 		panic(err)
 	}
 
-	address, err := utils.GetAddress(p1FromKeyStep3Data, p2FromKeyStep3Data)
-	if err != nil {
-		panic(err)
-	}
-
+	pubKey, err := utils.GetPubKey(p1FromKeyStep3Data, p2FromKeyStep3Data)
+	address := common.BytesToAddress(utils.PublicKeyToAddressBytes(pubKey))
 	fmt.Println("address: ", address.Hex())
 }

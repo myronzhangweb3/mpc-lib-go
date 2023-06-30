@@ -3,6 +3,8 @@ package model
 import (
 	"crypto/ecdsa"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"github.com/decred/dcrd/dcrec/secp256k1/v2"
 	"github.com/okx/threshold-lib/crypto/curves"
 	"github.com/okx/threshold-lib/crypto/paillier"
@@ -138,12 +140,66 @@ func (e *ECDSAKeyFrom) KeyGenRequestMessage(partnerDataId int) (*tss.Message, er
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println("start NewKeyPair")
 	e.PaillierPrivateKey, e.PaillierPublicKey, err = paillier.NewKeyPair(8)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println("start keygen.P1")
+	p1Dto, err := keygen.P1(e.KeyStep3Data.ShareI, e.PaillierPrivateKey, e.KeyStep3Data.Id, partnerDataId, preParams)
+	return p1Dto, err
+}
+
+// KeyGenRequestMessageByPrime p1 send message to p2 for keygen
+func (e *ECDSAKeyFrom) KeyGenRequestMessageByPrime(partnerDataId int, prime1, prime2 string) (*tss.Message, error) {
+	preParams := &keygen.PreParams{}
+	err := json.Unmarshal([]byte(e.preParamsStr), preParams)
+	if err != nil {
+		return nil, err
+	}
+	e.PaillierPrivateKey, e.PaillierPublicKey, err = PaillierNewKeyPair(prime1, prime2)
 	if err != nil {
 		return nil, err
 	}
 	p1Dto, err := keygen.P1(e.KeyStep3Data.ShareI, e.PaillierPrivateKey, e.KeyStep3Data.Id, partnerDataId, preParams)
 	return p1Dto, err
+}
+
+func String2BigInt(str string) (*big.Int, error) {
+	n := new(big.Int)
+	n, ok := n.SetString(str, 10)
+	if !ok {
+		return nil, errors.New("SetString: error")
+	}
+	return n, nil
+}
+
+// PaillierNewKeyPair generate paillier key pair
+func PaillierNewKeyPair(prime1, prime2 string) (*paillier.PrivateKey, *paillier.PublicKey, error) {
+	p, err := String2BigInt(prime1)
+	if err != nil {
+		return nil, nil, err
+	}
+	q, err := String2BigInt(prime2)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// n = p*q
+	n := new(big.Int).Mul(p, q)
+
+	// phi = (p-1) * (q-1)
+	pMinus1 := new(big.Int).Sub(p, big.NewInt(1))
+	qMinus1 := new(big.Int).Sub(q, big.NewInt(1))
+	phi := new(big.Int).Mul(pMinus1, qMinus1)
+
+	// lambda = lcm(p−1, q−1)
+	gcd := new(big.Int).GCD(nil, nil, pMinus1, qMinus1)
+	lambda := new(big.Int).Div(phi, gcd)
+
+	publicKey := &paillier.PublicKey{N: n}
+	privateKey := &paillier.PrivateKey{PublicKey: *publicKey, Lambda: lambda, Phi: phi}
+	return privateKey, publicKey, nil
 }
 
 type ECDSAKeyTo struct {

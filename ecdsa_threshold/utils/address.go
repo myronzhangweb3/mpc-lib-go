@@ -1,12 +1,12 @@
 package utils
 
 import (
-	"github.com/ethereum/go-ethereum/common"
+	"crypto/ecdsa"
 	"github.com/okx/threshold-lib/tss"
 	"okx-threshold-lib-demo/ecdsa_threshold/model"
 )
 
-func GetAddress(p1MsgFromData *tss.KeyStep3Data, p2MsgToData *tss.KeyStep3Data) (*common.Address, error) {
+func GetPubKey(p1MsgFromData *tss.KeyStep3Data, p2MsgToData *tss.KeyStep3Data) (*ecdsa.PublicKey, error) {
 	// Initialize both parties' private keys
 	p1FromKey := &model.ECDSAKeyFrom{}
 	p2ToKey := &model.ECDSAKeyTo{}
@@ -32,10 +32,5 @@ func GetAddress(p1MsgFromData *tss.KeyStep3Data, p2MsgToData *tss.KeyStep3Data) 
 
 	// The recipient generates a public key with a threshold signature based on the private data SaveData
 	pubKey, _, err := p2ToKey.GenPublicKeyAndShareI()
-	if err != nil {
-		return nil, err
-	}
-
-	address := common.BytesToAddress(publicKeyToAddressBytes(pubKey))
-	return &address, nil
+	return pubKey, err
 }

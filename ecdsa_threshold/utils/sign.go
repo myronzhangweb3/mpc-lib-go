@@ -69,7 +69,7 @@ func SignByKey(p1MsgFromData *tss.KeyStep3Data, p2MsgToData *tss.KeyStep3Data, m
 	// TODO p2 send E_k2_h_xr to p1 via API
 	r, s, _ := p1.Step3(E_k2_h_xr)
 
-	signHex, err := getSignByRS(pubKey, common.BytesToHash(messageHashBytes), r, s)
+	signHex, err := GetSignByRS(pubKey, common.BytesToHash(messageHashBytes), r, s)
 	if err != nil {
 		return []byte(""), err
 	}
@@ -81,7 +81,7 @@ func SignByKey(p1MsgFromData *tss.KeyStep3Data, p2MsgToData *tss.KeyStep3Data, m
 	return signBytes, nil
 }
 
-func getSignByRS(pubKey *ecdsa.PublicKey, messageHash common.Hash, r *big.Int, s *big.Int) (string, error) {
+func GetSignByRS(pubKey *ecdsa.PublicKey, messageHash common.Hash, r *big.Int, s *big.Int) (string, error) {
 	// Convert the signature to a byte array
 	signature := append(r.Bytes(), s.Bytes()...)
 
@@ -103,7 +103,7 @@ func getSignByRS(pubKey *ecdsa.PublicKey, messageHash common.Hash, r *big.Int, s
 	// Create an ethereum signature from r, s and v values
 	ethSignature := append(rInt.Bytes(), sInt.Bytes()...)
 	ethSignature = append(ethSignature, 0)
-	originalV := recoverV(rInt, sInt, messageHash.Bytes(), common.BytesToAddress(publicKeyToAddressBytes(pubKey)))
+	originalV := recoverV(rInt, sInt, messageHash.Bytes(), common.BytesToAddress(PublicKeyToAddressBytes(pubKey)))
 	ethSignature[64] = originalV
 
 	return hex.EncodeToString(ethSignature), err
@@ -125,7 +125,7 @@ func recoverV(r, s *big.Int, hash []byte, address common.Address) uint8 {
 	return 0
 }
 
-func publicKeyToAddressBytes(publicKey *ecdsa.PublicKey) []byte {
+func PublicKeyToAddressBytes(publicKey *ecdsa.PublicKey) []byte {
 	hash := sha3.NewLegacyKeccak256()
 	hash.Write(elliptic.Marshal(publicKey.Curve, publicKey.X, publicKey.Y)[1:])
 	return hash.Sum(nil)[12:]
