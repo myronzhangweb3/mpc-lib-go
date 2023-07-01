@@ -17,6 +17,8 @@ func NewRouter() *gin.Engine {
 	// Alive check
 	v1.GET("/", HealthHandler)
 
+	v1.GET("/random-prim", RandomPrimHandler)
+
 	v1.POST("/bind-user-p2", BindUserAndP2)
 
 	v1.POST("/get-address", GetAddressMessageHandler)

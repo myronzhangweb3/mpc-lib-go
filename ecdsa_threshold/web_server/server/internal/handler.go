@@ -6,15 +6,18 @@ import (
 	"fmt"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gin-gonic/gin"
+	"github.com/okx/threshold-lib/crypto"
 	"github.com/okx/threshold-lib/crypto/curves"
 	"github.com/okx/threshold-lib/crypto/schnorr"
 	"github.com/okx/threshold-lib/tss"
 	"github.com/okx/threshold-lib/tss/ecdsa/sign"
+	"math/big"
 	"net/http"
 	"okx-threshold-lib-demo/ecdsa_threshold/source/model"
 	utils2 "okx-threshold-lib-demo/ecdsa_threshold/source/utils"
 	"okx-threshold-lib-demo/ecdsa_threshold/web_server/server/global"
 	"path/filepath"
+	"runtime"
 )
 
 var (
@@ -50,6 +53,28 @@ func jsonResponse(c *gin.Context, data interface{}, err error) {
 
 func HealthHandler(c *gin.Context) {
 	jsonResponse(c, "ok", nil)
+	return
+}
+
+func RandomPrimHandler(c *gin.Context) {
+	currency := runtime.NumCPU()
+	primeBits := 2048
+
+	var values = make(chan *big.Int)
+	var quit = make(chan int)
+	var p, q *big.Int
+	for p == q {
+		for i := 0; i < currency; i++ {
+			go crypto.GenerateSafePrime(primeBits/2, values, quit)
+		}
+		p, q = <-values, <-values
+		close(quit)
+	}
+
+	jsonResponse(c, struct {
+		P string `json:"p"`
+		Q string `json:"q"`
+	}{p.String(), q.String()}, nil)
 	return
 }
 

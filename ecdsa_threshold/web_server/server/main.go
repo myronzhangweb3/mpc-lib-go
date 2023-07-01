@@ -27,7 +27,8 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	global.RootDir = filepath.Join(global.RootDir, "/ecdsa_threshold/web_server/key/")
+	global.RootDir = filepath.Join(global.RootDir, "key")
+	fmt.Println("Key root dir: " + global.RootDir)
 
 	engine := internal.NewRouter()
 	srv := &http.Server{
