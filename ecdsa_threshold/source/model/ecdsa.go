@@ -4,7 +4,6 @@ import (
 	"crypto/ecdsa"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/decred/dcrd/dcrec/secp256k1/v2"
 	"github.com/okx/threshold-lib/crypto/curves"
 	"github.com/okx/threshold-lib/crypto/paillier"
@@ -140,12 +139,10 @@ func (e *ECDSAKeyFrom) KeyGenRequestMessage(partnerDataId int) (*tss.Message, er
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("start NewKeyPair")
 	e.PaillierPrivateKey, e.PaillierPublicKey, err = paillier.NewKeyPair(8)
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("start keygen.P1")
 	p1Dto, err := keygen.P1(e.KeyStep3Data.ShareI, e.PaillierPrivateKey, e.KeyStep3Data.Id, partnerDataId, preParams)
 	return p1Dto, err
 }
