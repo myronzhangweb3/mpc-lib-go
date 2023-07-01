@@ -1,8 +1,9 @@
 # Ecdsa Threshold Signature On Web
 
+
 ## Tips
 
-> ⚠️ Not intended for direct use in production environments
+> ⚠️ This code cannot be used directly in a production environment
 
 1. Authentication is not implemented on server side. So the server is not secure.
 2. Nodejs is used to run wasm code. It is not necessary. You can use other language to run wasm code.
