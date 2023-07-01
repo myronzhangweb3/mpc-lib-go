@@ -80,7 +80,7 @@ func keyGenRequestMessage(this js.Value, i []js.Value) (response interface{}) {
 	prime1 := i[1].String()
 	prime2 := i[2].String()
 
-	message, err := globalP1FromKey.KeyGenRequestMessageByPrime(partnerDataId, prime1, prime2)
+	tssMessage, err := globalP1FromKey.KeyGenRequestMessageByPrime(partnerDataId, prime1, prime2)
 	if err != nil {
 		response = &WASMResponse{
 			Code: ResponseError,
@@ -90,7 +90,7 @@ func keyGenRequestMessage(this js.Value, i []js.Value) (response interface{}) {
 	} else {
 		response = &WASMResponse{
 			Code: ResponseSuccess,
-			Data: message,
+			Data: tssMessage,
 		}
 	}
 
@@ -258,11 +258,6 @@ func p1Step3(this js.Value, i []js.Value) (response interface{}) {
 	return
 }
 
-/**
- * 1. 生成密钥数据/将密钥写入程序
- * 2. 生成密钥请求消息
- * 3. 计算签名
- */
 func main() {
 	js.Global().Get("console").Call("log", "Init threshold web assembly!")
 	done := make(chan int, 0)
@@ -274,12 +269,17 @@ func main() {
 	// test
 	js.Global().Set("add", js.FuncOf(func(this js.Value, i []js.Value) interface{} { return i[0].Int() + i[1].Int() }))
 
-	// threshold sign
+	// generate three parties keys
 	js.Global().Set("generateDeviceData", js.FuncOf(generateDeviceData))
+	// init p1 data by p1 key
 	js.Global().Set("initP1KeyData", js.FuncOf(initP1KeyData))
+	// get tssMessage for request communicate
 	js.Global().Set("keyGenRequestMessage", js.FuncOf(keyGenRequestMessage))
+	// init public key in go
 	js.Global().Set("initPubKey", js.FuncOf(initPubKey))
+	// init p1 content in go
 	js.Global().Set("initP1Context", js.FuncOf(initP1Context))
+	// sign step for p1
 	js.Global().Set("p1Step1", js.FuncOf(p1Step1))
 	js.Global().Set("p1Step2", js.FuncOf(p1Step2))
 	js.Global().Set("p1Step3", js.FuncOf(p1Step3))

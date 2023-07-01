@@ -17,15 +17,15 @@ func GetPubKey(p1MsgFromData *tss.KeyStep3Data, p2MsgToData *tss.KeyStep3Data) (
 	p1FromKey.KeyStep3Data = p1MsgFromData
 	p2ToKey.KeyStep3Data = p2MsgToData
 
-	// The originator requests a co-signature from the receiver and needs to initialize the necessary keys in preparation for sending the message to the receiver
-	message, err := p1FromKey.KeyGenRequestMessage(p2MsgToData.Id)
+	// The originator requests a co-signature from the receiver and needs to initialize the necessary keys in preparation for sending the tssMessage to the receiver
+	tssMessage, err := p1FromKey.KeyGenRequestMessage(p2MsgToData.Id)
 	if err != nil {
 		return nil, err
 	}
 
-	// TODO p1 send message to p2 via API
-	// The receiver generates the receiver's private data SaveData based on the message and the initiator's public data
-	err = p2ToKey.GenSaveData(message, p1FromKey.KeyStep3Data.Id)
+	// TODO p1 send tssMessage to p2 via API
+	// The receiver generates the receiver's private data SaveData based on the tssMessage and the initiator's public data
+	err = p2ToKey.GenSaveData(tssMessage, p1FromKey.KeyStep3Data.Id)
 	if err != nil {
 		return nil, err
 	}

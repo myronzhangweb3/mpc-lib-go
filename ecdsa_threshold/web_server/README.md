@@ -49,6 +49,12 @@ cd nodejs
 npm install
 ```
 
+```bash
+# Build wasm code
+cd nodejs/gocmd
+./build_wasm.sh
+```
+
 ## Usage
 
 ### Run Server
