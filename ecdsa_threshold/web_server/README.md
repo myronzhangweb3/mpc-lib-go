@@ -1,5 +1,13 @@
 # Ecdsa Threshold Signature On Web
 
+## Tips
+
+> ⚠️ Not intended for direct use in production environments
+
+1. Authentication is not implemented on server side. So the server is not secure.
+2. Nodejs is used to run wasm code. It is not necessary. You can use other language to run wasm code.
+3. Nodejs lacks a step to write the private key to a client-local file. So the private key is not secure.
+
 ## Introduction
 
 This is a simple HTTP server for ecdsa threshold. It is used to receive the message from the client and send the response to the client.
