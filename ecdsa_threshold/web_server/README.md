@@ -16,8 +16,8 @@ Then the client will use the response to generate the data what they need.
 
 ## Dependencies
 
-- Go: 1.17
-- Nodejs: 14
+- Go: 1.19
+- Nodejs: 14.x
 
 
 ## Installation
@@ -26,9 +26,9 @@ Then the client will use the response to generate the data what they need.
 
 ```bash
 # Download Go
-wget https://golang.org/dl/go1.17.linux-amd64.tar.gz
+wget https://golang.org/dl/go1.19.linux-amd64.tar.gz
 # Unzip
-tar -C /usr/local -xzf go1.17.linux-amd64.tar.gz
+tar -C /usr/local -xzf go1.19.linux-amd64.tar.gz
 # Add to PATH
 export PATH=$PATH:/usr/local/go/bin
 ```
