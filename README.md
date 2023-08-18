@@ -1,4 +1,4 @@
-# OKX Threshold lib Demo
+# MPC lib
 
 This library is a Golang implementation of {2,n}-threshold ECDSA and Ed25519 by [okx-threshold-lib](https://github.com/okx/threshold-lib).
 
