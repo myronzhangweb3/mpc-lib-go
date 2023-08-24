@@ -10,7 +10,7 @@ data1 is stored on the server, data2 is stored on the terminal, and data3 is sto
 cd generate_device_data
 # params: keyPath
 # output: save data1 data2 data3 to file
-go run main.go ../../key
+go run main.go ../key
 ```
 
 ## 2. GetAddress
@@ -23,7 +23,7 @@ The terminal can call GetAddress(data1,data2) to get the wallet address
 cd get_address
 # params: data1 data2
 # output: address
-go run main.go ../../key/p1JsonData.json ../../key/p2JsonData.json
+go run main.go ../key/p1JsonData.json ../key/p2JsonData.json
 ```
 
 ## 3. Sign
@@ -49,7 +49,7 @@ go run main.go '80001' '0x27a01491d86F3F3b3085a0Ebe3F640387DBdb0EC' '1000000' '4
 cd sign
 # params: data1 data2 txDataHash
 # output: signature
-go run main.go ../../key/p1JsonData.json ../../key/p2JsonData.json '85eb8167756e6513cb3c6c1041e99615db0df6c72c1a8a94e144fc0fc626884a'
+go run main.go ../key/p1JsonData.json ../key/p2JsonData.json '85eb8167756e6513cb3c6c1041e99615db0df6c72c1a8a94e144fc0fc626884a'
 ```
 
 ### 3.2 Get tx raw data
@@ -71,6 +71,6 @@ The terminal can call Recover to refresh three copies of data
 cd recover
 # params: data1 data2 data3 newKeyDirPath
 # output: new data1 data2 data3 files
-go run main.go ../../key/p1JsonData.json ../../key/p2JsonData.json ../../key/p3JsonData.json ../../key_new
+go run main.go ../key/p1JsonData.json ../key/p2JsonData.json ../key/p3JsonData.json ../key_new
 ```
 
