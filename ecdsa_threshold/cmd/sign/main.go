@@ -21,11 +21,7 @@ func main() {
 		panic(err)
 	}
 
-	messageHashHexStr, err := hex.DecodeString(os.Args[3])
-	if err != nil {
-		panic(err)
-	}
-	signBytes, err := utils2.SignByKey(p1FromKeyStep3Data, p2FromKeyStep3Data, messageHashHexStr)
+	signBytes, err := utils2.SignByKey(p1FromKeyStep3Data, p2FromKeyStep3Data, os.Args[3])
 	if err != nil {
 		panic(err)
 	}

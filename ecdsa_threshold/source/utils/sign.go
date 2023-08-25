@@ -15,7 +15,7 @@ import (
 )
 
 // SignByKey Only for unit test
-func SignByKey(p1MsgFromData *tss.KeyStep3Data, p2MsgToData *tss.KeyStep3Data, messageHashBytes []byte) ([]byte, error) {
+func SignByKey(p1MsgFromData *tss.KeyStep3Data, p2MsgToData *tss.KeyStep3Data, messageHash string) ([]byte, error) {
 	// Initialize both parties' private keys
 	p1FromKey := &model.ECDSAKeyFrom{}
 	p2ToKey := &model.ECDSAKeyTo{}
@@ -47,10 +47,10 @@ func SignByKey(p1MsgFromData *tss.KeyStep3Data, p2MsgToData *tss.KeyStep3Data, m
 
 	// TODO p2 send pubKey to p1 via API
 	// The initiator generates a random number k1
-	p1 := sign.NewP1(pubKey, hex.EncodeToString(messageHashBytes), p1FromKey.PaillierPrivateKey)
+	p1 := sign.NewP1(pubKey, messageHash, p1FromKey.PaillierPrivateKey)
 
 	// The receiver generates a random number k2
-	p2 := sign.NewP2(x2, p2ToKey.SaveData.E_x1, pubKey, p2ToKey.SaveData.PaiPubKey, hex.EncodeToString(messageHashBytes))
+	p2 := sign.NewP2(x2, p2ToKey.SaveData.E_x1, pubKey, p2ToKey.SaveData.PaiPubKey, messageHash)
 
 	// First step
 	// The initiator calculates the elliptic curve point (k1*G,public key) based on k1
@@ -69,7 +69,7 @@ func SignByKey(p1MsgFromData *tss.KeyStep3Data, p2MsgToData *tss.KeyStep3Data, m
 	// TODO p2 send E_k2_h_xr to p1 via API
 	r, s, _ := p1.Step3(E_k2_h_xr)
 
-	signHex, err := GetSignByRS(pubKey, common.BytesToHash(messageHashBytes), r, s)
+	signHex, err := GetSignByRS(pubKey, common.HexToHash(messageHash), r, s)
 	if err != nil {
 		return []byte(""), err
 	}
