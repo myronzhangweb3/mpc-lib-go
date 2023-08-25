@@ -234,6 +234,7 @@ func p1Step3(this js.Value, i []js.Value) (response interface{}) {
 	}()
 
 	E_k2_h_xr_Str := i[0].String()
+	messageHash := i[1].String()
 
 	r, s, err := globalP1.Step3(utils2.Str2BigInt(E_k2_h_xr_Str))
 	if err != nil {
@@ -244,7 +245,7 @@ func p1Step3(this js.Value, i []js.Value) (response interface{}) {
 		return
 	}
 
-	signHex, _ := utils2.GetSignByRS(globalECDSAPubKey, common.HexToHash("85eb8167756e6513cb3c6c1041e99615db0df6c72c1a8a94e144fc0fc626884a"), r, s)
+	signHex, _ := utils2.GetSignByRS(globalECDSAPubKey, common.HexToHash(messageHash), r, s)
 
 	response = &WASMResponse{
 		Code: ResponseSuccess,

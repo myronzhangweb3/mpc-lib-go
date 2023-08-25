@@ -38,7 +38,7 @@ The terminal can call Sign(content,data1,data2) to sign the data
 cd build_tx
 # params: chainId toAddress nonce gasPrice  
 # output: txDataHash
-go run main.go '80001' '0x27a01491d86F3F3b3085a0Ebe3F640387DBdb0EC' '1000000' '5' '500000000000'
+go run main.go '80001' '0x27a01491d86F3F3b3085a0Ebe3F640387DBdb0EC' '1000000' '6' '500000000000'
 ```
 
 ### 3.2 Sign tx
@@ -49,16 +49,16 @@ go run main.go '80001' '0x27a01491d86F3F3b3085a0Ebe3F640387DBdb0EC' '1000000' '5
 cd sign
 # params: data1 data2 txDataHash
 # output: signature
-go run main.go ../key/p1JsonData.json ../key/p2JsonData.json 'f4a88f2bebafcd4180181f49fe1b8e8d20b865b7e2f685fa921a245a40863e28'
+go run main.go ../key/p1JsonData.json ../key/p2JsonData.json '1635b3221c01a44dca3775217a1862c5f8df5d214aadfd6e8c0f6471ca28cd75'
 ```
 
 ### 3.2 Get tx raw data
 
 ```shell
 cd build_tx
-# params: chainId toAddress nonce gasPrice  
+# params: chainId toAddress nonce gasPrice signature
 # output: txDataHash
-go run main.go '80001' '0x27a01491d86F3F3b3085a0Ebe3F640387DBdb0EC' '1000000' '5' '500000000000' 'fd8899ff5bed667b8478093bc9c1a29f2cf0c632c66ae004f4d991a8771b4e420bb1433ffc57458c3042f11a74f06ed87f8f34cc1cb65f94ac7a32a7f3023f7900'
+go run main.go '80001' '0x27a01491d86F3F3b3085a0Ebe3F640387DBdb0EC' '1000000' '6' '500000000000' '80c21d5fb9a0730357dc1b6ee2d05533c831bb8fc78e41abd11ebe8283c5ed660a58c4cede57b79e86d8a2fb7f4efe1359b5888f14e0b9e8d23ed8166ded7bd500'
 ```
 
 ## 4. Recover
